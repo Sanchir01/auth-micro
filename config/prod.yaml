@@ -13,5 +13,5 @@ redis:
   dbnumber: 0
 
 grpc:
-  port: "44044"
+  port: "44049"
   timeout: 360s
