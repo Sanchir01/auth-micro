@@ -19,7 +19,9 @@ func NewEnv() (*App, error) {
 		lg.Error("pgx error connect", err.Error())
 		return nil, err
 	}
-	gRPCServer := grpcapp.New(lg, ":"+cfg.GRPC.Port)
+	repos := NewRepository(db)
+	serv := NewServices(repos)
+	gRPCServer := grpcapp.New(lg, ":"+cfg.GRPC.Port, serv.UserService)
 	return &App{
 		GRPCSrv: gRPCServer,
 		DB:      db,

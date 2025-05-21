@@ -13,7 +13,8 @@ import (
 
 func PGXNew(cfg *config.Config, ctx context.Context) (*pgxpool.Pool, error) {
 	var dsn string
-
+	passwordpg := os.Getenv("DB_PASSWORD_PROD")
+	fmt.Println(passwordpg)
 	switch cfg.Env {
 	case "development":
 		dsn = fmt.Sprintf(
@@ -22,7 +23,7 @@ func PGXNew(cfg *config.Config, ctx context.Context) (*pgxpool.Pool, error) {
 	case "production":
 		dsn = fmt.Sprintf(
 			"postgresql://%s:%s@%s:%s/%s",
-			cfg.DB.User, os.Getenv("DB_PASSWORD_PROD"),
+			cfg.DB.User, passwordpg,
 			cfg.DB.Host, cfg.DB.Port, cfg.DB.Database,
 		)
 	}
@@ -38,7 +39,7 @@ func PGXNew(cfg *config.Config, ctx context.Context) (*pgxpool.Pool, error) {
 			return err
 		}
 		return nil
-	}, cfg.DB.MaxAttempts, 5*time.Second)
+	}, 1, 5*time.Second)
 
 	if err != nil {
 		return nil, err

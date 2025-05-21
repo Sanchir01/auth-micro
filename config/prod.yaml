@@ -1,5 +1,17 @@
 env: "production"
 
+database:
+  host: 103.74.92.37
+  port: "5436"
+  user: "postgres"
+  dbname: "postgres"
+  max_attempts: 10
+
+redis:
+  host: "103.74.92.37"
+  port: "6378"
+  dbnumber: 0
+
 grpc:
   port: "44044"
-  timeout: 360
+  timeout: 360s

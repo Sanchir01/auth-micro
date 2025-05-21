@@ -31,7 +31,7 @@ func (s *Service) UserById(ctx context.Context, id uuid.UUID) (*User, error) {
 	}
 	return user, nil
 }
-func (s *Service) UserByEmail(ctx context.Context, email string, password string) (*User, error) {
+func (s *Service) Login(ctx context.Context, email string, password string) (*User, error) {
 	usersdb, err := s.RepositoryUser.GetByEmail(ctx, email)
 	if err != nil {
 
@@ -62,8 +62,26 @@ func (s *Service) UserByPhone(ctx context.Context, phone string) (*User, error) 
 	return usersdb, nil
 }
 
-func (s *Service) Registrations(ctx context.Context, password, phone, title, email string, tx pgx.Tx) error {
-	_, err := s.RepositoryUser.GetByPhone(ctx, phone)
+func (s *Service) Registrations(ctx context.Context, password, phone, title, email string) error {
+	conn, err := s.primaryDB.Acquire(ctx)
+	if err != nil {
+		return err
+	}
+	defer conn.Release()
+	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			rollbackErr := tx.Rollback(ctx)
+			if rollbackErr != nil {
+				err = errors.Join(err, rollbackErr)
+				return
+			}
+		}
+	}()
+	_, err = s.RepositoryUser.GetByPhone(ctx, phone)
 	if err == nil {
 		slog.Error("User with this phone already exists")
 		return errors.New("user with this phone already exists")

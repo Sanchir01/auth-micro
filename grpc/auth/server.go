@@ -3,6 +3,7 @@ package authgrpc
 import (
 	"context"
 	"fmt"
+
 	"github.com/Sanchir01/auth-micro/internal/features/user"
 	authv1 "github.com/Sanchir01/auth-proto/gen/go/auth"
 	"github.com/go-playground/validator/v10"
