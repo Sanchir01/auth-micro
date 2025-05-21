@@ -1,0 +1,18 @@
+env: "development"
+
+
+database:
+  host: localhost
+  port: "5436"
+  user: "postgres"
+  dbname: "auth-db"
+  max_attempts: 10
+
+redis:
+  host: "localhost"
+  port: "6378"
+  dbnumber: 0
+
+grpc:
+  port: "44044"
+  timeout: 360s
