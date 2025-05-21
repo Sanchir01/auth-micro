@@ -22,14 +22,14 @@ run: build
 	ENV_FILE=".env.prod" ./.bin/main
 
 migrations-up:
-	goose -dir migrations postgres "host=localhost user=postgres password=postgres port=5435 dbname=auth-micro sslmode=disable"  up
+	goose -dir migrations postgres "host=localhost user=postgres password=postgres port=5436 dbname=auth-db sslmode=disable"  up
 
 migrations-down:
-	goose -dir migrations postgres  "host=localhost user=postgres password=postgres port=5435 dbname=auth-micro sslmode=disable"  down
+	goose -dir migrations postgres  "host=localhost user=postgres password=postgres port=5436 dbname=auth-db sslmode=disable"  down
 
 
 migrations-status:
-	goose -dir migrations postgres  "host=localhost user=postgres password=postgres port=5435 dbname=auth-micro sslmode=disable" status
+	goose -dir migrations postgres  "host=localhost user=postgres password=postgres port=5436 dbname=auth-db sslmode=disable" status
 
 migrations-new:
 	goose -dir migrations create $(MIGRATION_NAME) sql
