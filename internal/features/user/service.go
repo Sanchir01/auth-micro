@@ -18,9 +18,10 @@ type Service struct {
 	primaryDB      *pgxpool.Pool
 }
 
-func NewService(RepositoryUser *RepositoryUser) *Service {
+func NewService(RepositoryUser *RepositoryUser, primarydb *pgxpool.Pool) *Service {
 	return &Service{
 		RepositoryUser: RepositoryUser,
+		primaryDB:      primarydb,
 	}
 }
 
@@ -63,25 +64,8 @@ func (s *Service) UserByPhone(ctx context.Context, phone string) (*User, error) 
 }
 
 func (s *Service) Registrations(ctx context.Context, password, phone, title, email string) error {
-	conn, err := s.primaryDB.Acquire(ctx)
-	if err != nil {
-		return err
-	}
-	defer conn.Release()
-	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
-	if err != nil {
-		return err
-	}
-	defer func() {
-		if err != nil {
-			rollbackErr := tx.Rollback(ctx)
-			if rollbackErr != nil {
-				err = errors.Join(err, rollbackErr)
-				return
-			}
-		}
-	}()
-	_, err = s.RepositoryUser.GetByPhone(ctx, phone)
+
+	_, err := s.RepositoryUser.GetByPhone(ctx, phone)
 	if err == nil {
 		slog.Error("User with this phone already exists")
 		return errors.New("user with this phone already exists")
@@ -90,7 +74,7 @@ func (s *Service) Registrations(ctx context.Context, password, phone, title, ema
 	_, err = s.RepositoryUser.GetByEmail(ctx, email)
 	if err == nil {
 		slog.Error("User with this email already exists")
-		return errors.New("user with this slug already exists")
+		return errors.New("user with this email already exists")
 	}
 
 	rand.Seed(time.Now().UnixNano())
@@ -105,7 +89,25 @@ func (s *Service) Registrations(ctx context.Context, password, phone, title, ema
 	}
 	return nil
 }
-func (s *Service) ConfirmRegister(ctx context.Context, password, phone, title, email, code string, tx pgx.Tx) (*User, error) {
+func (s *Service) ConfirmRegister(ctx context.Context, password, phone, title, email, code string) (*User, error) {
+	conn, err := s.primaryDB.Acquire(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Release()
+	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if err != nil {
+			rollbackErr := tx.Rollback(ctx)
+			if rollbackErr != nil {
+				err = errors.Join(err, rollbackErr)
+				return
+			}
+		}
+	}()
 	oldcode, err := s.RepositoryUser.GetUserCodeByEmail(ctx, email)
 	if err != nil {
 		return nil, err
@@ -123,6 +125,9 @@ func (s *Service) ConfirmRegister(ctx context.Context, password, phone, title, e
 	}
 	user, err := s.RepositoryUser.CreateUser(ctx, title, phone, email, "user", hashedPassword, tx)
 	if err != nil {
+		return nil, err
+	}
+	if err := tx.Commit(ctx); err != nil {
 		return nil, err
 	}
 	return user, nil

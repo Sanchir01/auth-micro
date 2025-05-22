@@ -6,8 +6,8 @@ type Services struct {
 	UserService *user.Service
 }
 
-func NewServices(repos *Repository) *Services {
+func NewServices(repos *Repository, db *Database) *Services {
 	return &Services{
-		UserService: user.NewService(repos.UserRepository),
+		UserService: user.NewService(repos.UserRepository, db.PrimaryDB),
 	}
 }
