@@ -1,10 +1,10 @@
 package grpcapp
 
 import (
+	"github.com/Sanchir01/auth-micro/servers/grpc/auth"
 	"log/slog"
 	"net"
 
-	authgrpc "github.com/Sanchir01/auth-micro/grpc/auth"
 	"google.golang.org/grpc"
 )
 

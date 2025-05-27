@@ -13,11 +13,13 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT, os.Interrupt)
 
 	defer cancel()
-
+	
 	go func() { env.GRPCSrv.MustStart() }()
+
 	<-ctx.Done()
 
 	env.GRPCSrv.Stop()

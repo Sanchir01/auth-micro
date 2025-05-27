@@ -8,6 +8,13 @@ database:
   dbname: "auth-db"
   max_attempts: 10
 
+prometheus:
+  host: "localhost"
+  port: 8081
+  timeout: 4s
+  debug: true
+  idle_timeout: 60s
+
 redis:
   host: "localhost"
   port: "6378"

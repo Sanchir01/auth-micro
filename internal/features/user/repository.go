@@ -13,18 +13,18 @@ import (
 )
 
 type RepositoryUser struct {
-	primartDB *pgxpool.Pool
+	primaryDB *pgxpool.Pool
 	redisDB   *redis.Client
 }
 
-func NewRepositoryUser(primartDB *pgxpool.Pool, redisDB *redis.Client) *RepositoryUser {
+func NewRepositoryUser(primaryDB *pgxpool.Pool, redisDB *redis.Client) *RepositoryUser {
 	return &RepositoryUser{
-		primartDB,
+		primaryDB,
 		redisDB,
 	}
 }
 func (r *RepositoryUser) GetByPhone(ctx context.Context, phone string) (*User, error) {
-	conn, err := r.primartDB.Acquire(ctx)
+	conn, err := r.primaryDB.Acquire(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -55,43 +55,52 @@ func (r *RepositoryUser) GetByPhone(ctx context.Context, phone string) (*User, e
 	}, nil
 }
 func (r *RepositoryUser) GetByEmail(ctx context.Context, email string) (*User, error) {
-	conn, err := r.primartDB.Acquire(ctx)
+
+	conn, err := r.primaryDB.Acquire(ctx)
 	if err != nil {
 		return nil, err
 	}
 	defer conn.Release()
 
-	query, arg, err := sq.
-		Select("id ,title, phone, created_at, updated_at, version, role, password,email").
+	query, args, err := sq.
+		Select("id, title, phone, created_at, updated_at, version, role, password, email").
 		From("public.users").
 		Where(sq.Eq{"email": email}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-	var user DBUser
+	if err != nil {
+		return nil, err
+	}
 
-	if err := conn.QueryRow(ctx, query, arg...).Scan(
-		&user.ID, &user.Title, &user.Phone, &user.CreatedAt, &user.UpdatedAt, &user.Version, &user.Role, &user.Password, &user.Email); err != nil {
+	var user DBUser
+	err = conn.QueryRow(ctx, query, args...).Scan(
+		&user.ID, &user.Title, &user.Phone, &user.CreatedAt,
+		&user.UpdatedAt, &user.Version, &user.Role,
+		&user.Password, &user.Email,
+	)
+	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, fmt.Errorf("Неправильный логин или пароль")
 		}
 		return nil, err
 	}
-	pass := base64.StdEncoding.EncodeToString(user.Password)
-	return &User{
-		ID:    user.ID,
-		Title: user.Title,
 
+	result := &User{
+		ID:        user.ID,
+		Title:     user.Title,
 		Phone:     user.Phone,
 		Role:      user.Role,
 		Email:     user.Email,
 		Version:   user.Version,
-		Password:  pass,
+		Password:  base64.StdEncoding.EncodeToString(user.Password), // при необходимости
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
-	}, nil
+	}
+
+	return result, nil
 }
 func (r *RepositoryUser) GetBySlug(ctx context.Context, slug string) (*User, error) {
-	conn, err := r.primartDB.Acquire(ctx)
+	conn, err := r.primaryDB.Acquire(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +132,7 @@ func (r *RepositoryUser) GetBySlug(ctx context.Context, slug string) (*User, err
 }
 
 func (r *RepositoryUser) GetById(ctx context.Context, userId uuid.UUID) (*User, error) {
-	conn, err := r.primartDB.Acquire(ctx)
+	conn, err := r.primaryDB.Acquire(ctx)
 	if err != nil {
 		return nil, err
 	}

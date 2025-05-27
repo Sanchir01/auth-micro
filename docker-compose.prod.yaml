@@ -4,34 +4,34 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "44044:44044"
+      - "44049:44049"
     command: make run
     restart: always
     depends_on:
       - db
       - redis
-  db:
-    restart: always
-    image: postgres:latest
-    ports:
-      - "5436:5432"
-    environment:
-      - POSTGRES_DB=auth-db
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_USER=postgres
-  redis:
-    image: redis:latest
-    restart: always
-    environment:
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-    ports:
-      - "6378:6378"
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
     volumes:
-      - redis_data:/data
-    command: redis-server --requirepass ${REDIS_PASSWORD} --save 60 1 --loglevel warning
+      - ./config/prometheus.prod.yaml:/etc/prometheus/prometheus.prod.yaml
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
 
 
 volumes:
   app:
-  db:
-  redis:
+  grafana_data:

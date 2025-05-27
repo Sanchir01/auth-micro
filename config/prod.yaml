@@ -12,6 +12,13 @@ redis:
   port: "6378"
   dbnumber: 0
 
+prometheus:
+  host: "103.74.92.37"
+  port: 8081
+  timeout: 4s
+  debug: true
+  idle_timeout: 60s
+
 grpc:
   port: "44049"
   timeout: 360s

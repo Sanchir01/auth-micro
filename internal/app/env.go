@@ -10,6 +10,7 @@ type App struct {
 	GRPCSrv *grpcapp.App
 	DB      *Database
 	Log     *slog.Logger
+	Config  *config.Config
 }
 
 func NewEnv() (*App, error) {
@@ -28,5 +29,6 @@ func NewEnv() (*App, error) {
 		GRPCSrv: gRPCServer,
 		DB:      db,
 		Log:     lg,
+		Config:  cfg,
 	}, nil
 }
