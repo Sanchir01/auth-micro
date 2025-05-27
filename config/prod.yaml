@@ -21,4 +21,4 @@ prometheus:
 
 grpc:
   port: "44049"
-  timeout: 360s
+  timeout: 10s
