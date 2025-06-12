@@ -15,7 +15,7 @@ type User struct {
 	Phone     string    `json:"phone"`
 	Email     string    `json:"email"`
 	Password  string    `json:"password"`
-	Role      Role      `json:"role"`
+	Role      string    `json:"role"`
 }
 
 type DBUser struct {
@@ -27,5 +27,5 @@ type DBUser struct {
 	Phone     string    `db:"phone"`
 	Email     string    `json:"email"`
 	Password  []byte    `db:"password"`
-	Role      Role      `db:"role"`
+	Role      string    `db:"role"`
 }

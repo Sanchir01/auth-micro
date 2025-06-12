@@ -11,19 +11,12 @@ import (
 )
 
 type Config struct {
-	Env        string     `yaml:"env" required:"true"`
-	GRPC       GRPC       `yaml:"grpc" required:"true"`
-	RedisDB    Redis      `yaml:"redis"`
-	DB         DataBase   `yaml:"database"`
-	Prometheus Prometheus `yaml:"prometheus"`
+	Env     string   `yaml:"env" required:"true"`
+	GRPC    GRPC     `yaml:"grpc" required:"true"`
+	RedisDB Redis    `yaml:"redis"`
+	DB      DataBase `yaml:"database"`
 }
-type Prometheus struct {
-	Timeout     time.Duration `yaml:"timeout"  env-default:"4s"`
-	Host        string        `yaml:"host"  env-default:"localhost"`
-	Port        string        `yaml:"port"  env-default:"8081"`
-	Debug       bool          `yaml:"debug"  env-default:"true"`
-	IdleTimeout time.Duration `yaml:"idle_timeout"  env-default:"60s"`
-}
+
 type GRPC struct {
 	Port    string        `yaml:"port" required:"true"`
 	Host    string        `yaml:"host" required:"true"`

@@ -3,12 +3,15 @@ package user
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
+	"log"
+	"log/slog"
 	"time"
 )
 
@@ -55,7 +58,7 @@ func (r *RepositoryUser) GetByPhone(ctx context.Context, phone string) (*User, e
 	}, nil
 }
 func (r *RepositoryUser) GetByEmail(ctx context.Context, email string) (*User, error) {
-
+	
 	conn, err := r.primaryDB.Acquire(ctx)
 	if err != nil {
 		return nil, err
@@ -84,7 +87,14 @@ func (r *RepositoryUser) GetByEmail(ctx context.Context, email string) (*User, e
 		}
 		return nil, err
 	}
-
+	userJson, err := json.Marshal(user)
+	if err != nil {
+		slog.Error("failed cashed user", err.Error())
+	}
+	//todo update seconds in 2 week
+	if err := r.redisDB.Set(ctx, "userbyemail", userJson, 2*time.Second).Err(); err != nil {
+		log.Printf("Failed to cache candles: %v", err)
+	}
 	result := &User{
 		ID:        user.ID,
 		Title:     user.Title,
@@ -92,7 +102,7 @@ func (r *RepositoryUser) GetByEmail(ctx context.Context, email string) (*User, e
 		Role:      user.Role,
 		Email:     user.Email,
 		Version:   user.Version,
-		Password:  base64.StdEncoding.EncodeToString(user.Password), // при необходимости
+		Password:  base64.StdEncoding.EncodeToString(user.Password),
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 	}

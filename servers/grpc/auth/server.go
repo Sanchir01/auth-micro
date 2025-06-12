@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc/status"
 	"log/slog"
 	"runtime/debug"
+	"strings"
 )
 
 type LoginInput struct {
@@ -60,10 +61,10 @@ func (s *ServerApi) Login(ctx context.Context, req *authv1.LoginRequest) (*authv
 		slog.Error("Login error", "error", err)
 		return nil, status.Errorf(codes.Internal, "invalid input: %v", err)
 	}
-
+	slog.Warn("Login", "user", user)
 	return &authv1.LoginResponse{
 		Phone: user.Phone,
-		Role:  authv1.Role_USER,
+		Role:  mapRole(user.Role),
 		Title: user.Title,
 		Email: user.Email,
 	}, nil
@@ -108,16 +109,26 @@ func (s *ServerApi) ConfirmRegister(ctx context.Context, request *authv1.Confirm
 		return nil, status.Errorf(codes.InvalidArgument, "invalid input: %v", err.Error())
 	}
 
-	user, err := s.auth.ConfirmRegister(ctx, input.Password, input.Phone, input.Title, input.Email, input.Code)
+	confirmRegister, err := s.auth.ConfirmRegister(ctx, input.Password, input.Phone, input.Title, input.Email, input.Code)
 	if err != nil {
 		slog.Error("registration failed", "error", err)
 		return nil, status.Errorf(codes.Internal, "failed to register: %v", err.Error())
 	}
 
 	return &authv1.ConfirmRegisterResponse{
-		Phone: user.Phone,
+		Phone: confirmRegister.Phone,
 		Role:  authv1.Role_USER,
-		Title: user.Title,
-		Email: user.Email,
+		Title: confirmRegister.Title,
+		Email: confirmRegister.Email,
 	}, nil
+}
+func mapRole(role string) authv1.Role {
+	switch strings.ToLower(role) {
+	case "admin":
+		return authv1.Role_ADMIN
+	case "user":
+		return authv1.Role_USER
+	default:
+		return authv1.Role_ROLE_UNSPECIFIED
+	}
 }
