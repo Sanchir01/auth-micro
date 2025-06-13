@@ -5,8 +5,7 @@ services:
       dockerfile: Dockerfile
     ports:
       - "44049:44049"
-    command: make run
+    command: /main
     restart: always
 volumes:
   app:
-  redis:
